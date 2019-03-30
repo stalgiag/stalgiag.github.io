@@ -7784,7 +7784,7 @@ class WebXRPolyfill {
 
 var _default = WebXRPolyfill;
 exports.default = _default;
-},{}],"p5xr/p5vr/p5vr.js":[function(require,module,exports) {
+},{}],"p5xr/core/p5xr.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -7798,6 +7798,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var _instance;
 /**
  * p5vr class holds all state and methods that are specific to VR
  * @class
@@ -7810,237 +7815,310 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * (starting point for transform, default eye-level)
  * @property gl  {WebGLRenderingContext} points to p5.RendererGL.GL (the WebGL Rendering Context)
  * @property curClearColor  {Color} background clear color set by global `setVRBackgroundColor`
+ * @property self   {p5xr}  a more stable this
  */
-var p5vr = function p5vr() {
-  _classCallCheck(this, p5vr);
 
-  this.vrDevice = null;
-  this.vrSession = null;
-  this.vrFrameOfRef = null;
-  this.gl = null; // TODO: initialize with default and make this use p5.Color
 
-  this.curClearColor = null;
-  this.polyfill = new _webxrPolyfill.default();
-  /**
-   * Called by `createVRCanvas()`.
-   * Creates the button for entering VR.
-   * Requests an XRDevice object based on current device.
-   * Checks if the device supports an immersive session.
-   * Then binds the device to the button. <br>
-   * <b>TODO:</b> Custom styling for button prior to VR canvas creation.
-   */
+var p5xr =
+/*#__PURE__*/
+function () {
+  function p5xr() {
+    _classCallCheck(this, p5xr);
 
-  this.initVR = function () {
-    // Is WebXR available on this UA?
-    var xrButton = new XRDeviceButton({
-      onRequestSession: this.onVRButtonClicked.bind(this),
-      onEndSession: this.onSessionEnded.bind(this)
-    });
-    document.querySelector('header').appendChild(xrButton.domElement);
+    this.xrDevice = null;
+    this.xrSession = null;
+    this.xrFrameOfRef = null;
+    this.gl = null; // TODO: initialize with default and make this use p5.Color
 
-    if (navigator.xr) {
-      // Request a list of all the XR Devices connected to the system.
-      navigator.xr.requestDevice().then(function (device) {
-        // If the device allows creation of immersive sessions set it as the
-        // target of the 'Enter XR' button.
-        device.supportsSession({
-          immersive: true
-        }).then(function () {
-          console.log('supported');
-          xrButton.setDevice(device);
-        });
+    this.curClearColor = null;
+    this.polyfill = new _webxrPolyfill.default();
+    _instance = this;
+  }
+
+  _createClass(p5xr, null, [{
+    key: "instance",
+    get: function get() {
+      return _instance;
+    },
+    set: function set(p5xrInst) {
+      _instance = p5xrInst;
+      return _instance;
+    }
+  }]);
+
+  return p5xr;
+}();
+
+exports.default = p5xr;
+},{"webxr-polyfill":"../node_modules/webxr-polyfill/build/webxr-polyfill.module.js"}],"p5xr/p5vr/p5vr.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _p5xr2 = _interopRequireDefault(require("../core/p5xr"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+/**
+ * p5vr class holds all state and methods that are specific to VR
+ * @class
+ *
+ * @constructor
+ *
+ */
+var p5vr =
+/*#__PURE__*/
+function (_p5xr) {
+  _inherits(p5vr, _p5xr);
+
+  function p5vr() {
+    var _this;
+
+    _classCallCheck(this, p5vr);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(p5vr).call(this));
+    var self = _p5xr2.default.instance;
+    /**
+     * Called by `createVRCanvas()`.
+     * Creates the button for entering VR.
+     * Requests an XRDevice object based on current device.
+     * Checks if the device supports an immersive session.
+     * Then binds the device to the button. <br>
+     * <b>TODO:</b> Custom styling for button prior to VR canvas creation.
+     */
+
+    _this.initVR = function () {
+      // Is WebXR available on this UA?
+      var xrButton = new XRDeviceButton({
+        onRequestSession: self.onVRButtonClicked,
+        onEndSession: self.onSessionEnded
       });
-    }
-  };
-  /**
-   * This is where the actual p5 canvas is first created, and
-   * the GL rendering context is accessed by p5vr. 
-   * The current XRSession also gets a frame of reference and
-   * base rendering layer. <br>
-   * <b>TODO:</b> Make sure that p5's preload isn't actually completed until this function 
-   * is called.
-   * @param {XRSession}
-   */
+      document.querySelector('header').appendChild(xrButton.domElement);
+
+      if (navigator.xr) {
+        // Request a list of all the XR Devices connected to the system.
+        navigator.xr.requestDevice().then(function (device) {
+          // If the device allows creation of immersive sessions set it as the
+          // target of the 'Enter XR' button.
+          device.supportsSession({
+            immersive: true
+          }).then(function () {
+            console.log('supported');
+            xrButton.setDevice(device);
+          });
+        });
+      }
+    };
+    /**
+     * This is where the actual p5 canvas is first created, and
+     * the GL rendering context is accessed by p5vr. 
+     * The current XRSession also gets a frame of reference and
+     * base rendering layer. <br>
+     * <b>TODO:</b> Make sure that p5's preload isn't actually completed until this function 
+     * is called.
+     * @param {XRSession}
+     */
 
 
-  this.startSketch = function (session) {
-    var _this = this;
+    _this.startSketch = function (session) {
+      self.xrSession = session; // create p5 canvas
 
-    // create p5 canvas
-    createCanvas(windowWidth, windowHeight, WEBGL); // make a plan for where canvas should live
+      createCanvas(windowWidth, windowHeight, WEBGL); // make a plan for where canvas should live
 
-    var canvas = p5.instance.canvas; // get a copy of the same gl that p5 is using
+      var canvas = p5.instance.canvas; // get a copy of the same gl that p5 is using
 
-    this.gl = canvas.getContext('webgl', {
-      compatibleXRDevice: session.device
-    }); // Use the p5's WebGL context to create a XRWebGLLayer and set it as the
-    // sessions baseLayer. This allows any content rendered to the layer to
-    // be displayed on the XRDevice.
+      self.gl = canvas.getContext('webgl', {
+        compatibleXRDevice: session.device
+      }); // Use the p5's WebGL context to create a XRWebGLLayer and set it as the
+      // sessions baseLayer. This allows any content rendered to the layer to
+      // be displayed on the XRDevice.
 
-    session.baseLayer = new XRWebGLLayer(session, this.gl); // Get a frame of reference, which is required for querying poses. In
-    // this case an 'eye-level' frame of reference means that all poses will
-    // be relative to the location where the XRDevice was first detected.
+      session.baseLayer = new XRWebGLLayer(session, self.gl); // Get a frame of reference, which is required for querying poses. In
+      // this case an 'eye-level' frame of reference means that all poses will
+      // be relative to the location where the XRDevice was first detected.
 
-    session.requestFrameOfReference('eye-level').then(function (frameOfRef) {
-      _this.vrFrameOfRef = frameOfRef; // Inform the session that we're ready to begin drawing.
+      session.requestFrameOfReference('eye-level').then(function (frameOfRef) {
+        self.xrFrameOfRef = frameOfRef; // Inform the session that we're ready to begin drawing.
 
-      session.requestAnimationFrame(_this.onXRFrame.bind(_this));
-    });
-  };
-  /**
-   * `device.requestSession()` must be called within a user gesture event.
-   * @param {XRDevice}
-   */
-
-
-  this.onVRButtonClicked = function (device) {
-    // requestSession must be called within a user gesture event
-    // like click or touch when requesting an immersive session.
-    device.requestSession({
-      immersive: true
-    }).then(this.startSketch.bind(this));
-  };
-  /**
-   * This is the method that is attached to the event that announces
-   * availability of a new frame. The next animation frame is requested here,
-   * the device pose is retrieved, the modelViewMatrix (`uMVMatrix`) for p5 is set,
-   * and each eye is drawn
-   * @param frame {XRFrame}
-   */
+        session.requestAnimationFrame(self.onXRFrame);
+      });
+    };
+    /**
+     * `device.requestSession()` must be called within a user gesture event.
+     * @param {XRDevice}
+     */
 
 
-  this.onXRFrame = function (t, frame) {
-    var session = frame.session; // Inform the session that we're ready for the next frame.
+    _this.onVRButtonClicked = function (device) {
+      // requestSession must be called within a user gesture event
+      // like click or touch when requesting an immersive session.
+      device.requestSession({
+        immersive: true
+      }).then(self.startSketch);
+    };
+    /**
+     * This is the method that is attached to the event that announces
+     * availability of a new frame. The next animation frame is requested here,
+     * the device pose is retrieved, the modelViewMatrix (`uMVMatrix`) for p5 is set,
+     * and each eye is drawn
+     * @param frame {XRFrame}
+     */
 
-    session.requestAnimationFrame(this.onXRFrame.bind(this)); // Get the XRDevice pose relative to the Frame of Reference we created
-    // earlier.
 
-    var pose = frame.getDevicePose(this.vrFrameOfRef); // Getting the pose may fail if, for example, tracking is lost. So we
-    // have to check to make sure that we got a valid pose before attempting
-    // to render with it. If not in this case we'll just leave the
-    // framebuffer cleared, so tracking loss means the scene will simply
-    // dissapear.
+    _this.onXRFrame = function (t, frame) {
+      var session = self.xrSession = frame.session; // Inform the session that we're ready for the next frame.
 
-    if (pose) {
-      // If we do have a valid pose, bind the WebGL layer's framebuffer,
-      // which is where any content to be displayed on the XRDevice must be
-      // rendered.
-      this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, session.baseLayer.framebuffer);
+      session.requestAnimationFrame(self.onXRFrame); // Get the XRDevice pose relative to the Frame of Reference we created
+      // earlier.
 
-      this._clearVR();
+      var pose = frame.getDevicePose(self.xrFrameOfRef); // Getting the pose may fail if, for example, tracking is lost. So we
+      // have to check to make sure that we got a valid pose before attempting
+      // to render with it. If not in this case we'll just leave the
+      // framebuffer cleared, so tracking loss means the scene will simply
+      // dissapear.
 
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+      if (pose) {
+        // If we do have a valid pose, bind the WebGL layer's framebuffer,
+        // which is where any content to be displayed on the XRDevice must be
+        // rendered.
+        self.gl.bindFramebuffer(self.gl.FRAMEBUFFER, session.baseLayer.framebuffer);
 
-      try {
-        for (var _iterator = frame.views[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var view = _step.value;
-          var viewport = session.baseLayer.getViewport(view);
-          this.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+        self._clearVR();
 
-          p5.instance._renderer.uMVMatrix.set(pose.getViewMatrix(view));
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
 
-          p5.instance._renderer.uPMatrix.set(view.projectionMatrix);
-
-          this._drawEye();
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
         try {
-          if (!_iteratorNormalCompletion && _iterator.return != null) {
-            _iterator.return();
+          for (var _iterator = frame.views[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var view = _step.value;
+            var viewport = session.baseLayer.getViewport(view);
+            self.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+
+            p5.instance._renderer.uMVMatrix.set(pose.getViewMatrix(view));
+
+            p5.instance._renderer.uPMatrix.set(view.projectionMatrix);
+
+            _p5xr2.default.instance._drawEye();
           }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
         } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
+          try {
+            if (!_iteratorNormalCompletion && _iterator.return != null) {
+              _iterator.return();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
           }
         }
       }
-    }
-  };
-  /**
-   * clears the background based on the current clear color (`curClearColor`)
-   */
+    };
+    /**
+     * clears the background based on the current clear color (`curClearColor`)
+     */
 
 
-  this._clearVR = function () {
-    if (this.curClearColor === null) {
-      return;
-    }
-
-    window.p5.instance.background(this.curClearColor);
-  };
-  /**
-   * Runs the code that the user has in `draw()` once for each eye
-   * <b>TODO: </b> optimizations!
-   * <b>TODO: </b> make a different `_update` function so that the p5.RendererGL.prototype
-   * does not need to be modified (ie: we need to reset everything except the model view matrix)
-   */
-
-
-  this._drawEye = function () {
-    // 
-    if (!p5.instance._renderer.isP3D) {
-      return;
-    }
-
-    var context = window;
-    var userSetup = context.setup;
-    var userDraw = context.draw;
-
-    if (typeof userDraw === 'function') {
-      if (typeof userSetup === 'undefined') {
-        context.scale(context._pixelDensity, context._pixelDensity);
+    _this._clearVR = function () {
+      if (this.curClearColor === null) {
+        return;
       }
 
-      var callMethod = function callMethod(f) {
-        f.call(context);
-      }; // Just call a different function that does this minus matrix reset
+      window.p5.instance.background(this.curClearColor);
+    };
+    /**
+     * Runs the code that the user has in `draw()` once for each eye
+     * <b>TODO: </b> optimizations!
+     * <b>TODO: </b> make a different `_update` function so that the p5.RendererGL.prototype
+     * does not need to be modified (ie: we need to reset everything except the model view matrix)
+     */
 
 
-      if (context._renderer.isP3D) {
-        context._renderer._update();
+    _this._drawEye = function () {
+      // 
+      if (!p5.instance._renderer.isP3D) {
+        return;
       }
 
-      context._setProperty('frameCount', context.frameCount + 0.5);
+      var context = window;
+      var userSetup = context.setup;
+      var userDraw = context.draw;
 
-      context._registeredMethods.pre.forEach(callMethod);
+      if (typeof userDraw === 'function') {
+        if (typeof userSetup === 'undefined') {
+          context.scale(context._pixelDensity, context._pixelDensity);
+        }
 
-      p5.instance._inUserDraw = true;
+        var callMethod = function callMethod(f) {
+          f.call(context);
+        }; // Just call a different function that does this minus matrix reset
 
-      try {
-        userDraw();
-      } finally {
-        p5.instance._inUserDraw = false;
+
+        if (context._renderer.isP3D) {
+          context._renderer._update();
+        }
+
+        context._setProperty('frameCount', context.frameCount + 0.5);
+
+        context._registeredMethods.pre.forEach(callMethod);
+
+        p5.instance._inUserDraw = true;
+
+        try {
+          userDraw();
+        } finally {
+          p5.instance._inUserDraw = false;
+        }
+
+        context._registeredMethods.post.forEach(callMethod);
       }
+    };
 
-      context._registeredMethods.post.forEach(callMethod);
-    }
-  };
-
-  this.onEndSession = function () {};
-  /**
-  * Called either when the user has explicitly ended the session
-  *  or when the UA has ended the session for any reason.
-  * The vrSession is ended and discarded. p5 is reset with `remove()`
-  * 
-  */
+    _this.onEndSession = function () {};
+    /**
+    * Called either when the user has explicitly ended the session
+    *  or when the UA has ended the session for any reason.
+    * The xrSession is ended and discarded. p5 is reset with `remove()`
+    * 
+    */
 
 
-  this.onSessionEnded = function () {
-    this.vrSession.end();
-    this.vrSession = null;
-    this.xrButton.innerHTML = 'Enter VR';
-    this.gl = null;
-    window.p5.instance.remove();
-  };
-};
+    _this.onSessionEnded = function () {
+      this.xrSession.end();
+      this.xrSession = null;
+      this.xrButton.innerHTML = 'Enter VR';
+      this.gl = null;
+      window.p5.instance.remove();
+    };
+
+    return _this;
+  }
+
+  return p5vr;
+}(_p5xr2.default);
 
 exports.default = p5vr;
-},{"webxr-polyfill":"../node_modules/webxr-polyfill/build/webxr-polyfill.module.js"}],"p5xr/p5ar/p5ar.js":[function(require,module,exports) {
+},{"../core/p5xr":"p5xr/core/p5xr.js"}],"p5xr/p5ar/p5ar.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -8188,7 +8266,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58705" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59941" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
