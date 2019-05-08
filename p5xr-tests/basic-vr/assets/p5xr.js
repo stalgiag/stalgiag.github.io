@@ -7784,6 +7784,285 @@ class WebXRPolyfill {
 
 var _default = WebXRPolyfill;
 exports.default = _default;
+},{}],"webxr/webxr-version-shim.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+// Copyright 2018 The Immersive Web Community Group
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// This file contains various patches to adjust for differences in outdated browser
+// implementations of the WebXR API and allow the samples to be coded exclusively
+// against the most recent version.
+var XRRayShim =
+/*#__PURE__*/
+function () {
+  function XRRayShim(rayMatrix) {
+    _classCallCheck(this, XRRayShim);
+
+    this._transformMatrix = rayMatrix; // TODO: Don't rely on these types for the shim.
+    // Some browsers don't support them yet.
+
+    var o = new DOMPointReadOnly(0, 0, 0, 1);
+    var d = new DOMPointReadOnly(0, 0, -1, 0);
+    var t = new DOMMatrix(rayMatrix);
+    this._origin = DOMPointReadOnly.fromPoint(t.transformPoint(o));
+    this._direction = DOMPointReadOnly.fromPoint(t.transformPoint(d));
+  }
+
+  _createClass(XRRayShim, [{
+    key: "origin",
+    get: function get() {
+      return this._origin;
+    }
+  }, {
+    key: "direction",
+    get: function get() {
+      return this._direction;
+    }
+  }, {
+    key: "transformMatrix",
+    get: function get() {
+      return this._transformMatrix;
+    }
+  }]);
+
+  return XRRayShim;
+}();
+
+var WebXRVersionShim =
+/*#__PURE__*/
+function () {
+  function WebXRVersionShim() {
+    _classCallCheck(this, WebXRVersionShim);
+
+    if (this._shouldApplyPatch()) {
+      this._applyPatch();
+    }
+  }
+
+  _createClass(WebXRVersionShim, [{
+    key: "_isMobile",
+    value: function _isMobile() {
+      return /Android/i.test(navigator.userAgent) || /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      s;
+    }
+  }, {
+    key: "_shouldApplyPatch",
+    value: function _shouldApplyPatch() {
+      // Don't apply the patch with WebXR isn't available.
+      if (!('xr' in navigator)) {
+        return false;
+      } // Allow for universally disabling the version shim with a URL arg, which will
+      // make it easier to test updates to native implementations.
+
+
+      var query = window.location.search.substring(1) || window.location.hash.substring(1);
+      var vars = query.split('&');
+
+      for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+
+        if (pair[0].toLowerCase() == 'nowebxrversionshim') {
+          return false;
+        }
+      }
+
+      return true;
+    }
+  }, {
+    key: "_applyPatch",
+    value: function _applyPatch() {
+      // ===========================
+      // Chrome 67/68
+      // ===========================
+      // Map 'immersive' to the old 'exclusive' verbiage if needed.
+      if ('exclusive' in XRSession.prototype) {
+        var NATIVE_SUPPORTS_SESSION = XRDevice.prototype.supportsSession;
+
+        XRDevice.prototype.supportsSession = function (options) {
+          options.exclusive = !!options.immersive;
+          return NATIVE_SUPPORTS_SESSION.call(this, options);
+        };
+
+        var NATIVE_REQUEST_SESSION = XRDevice.prototype.requestSession;
+
+        XRDevice.prototype.requestSession = function (options) {
+          options.exclusive = !!options.immersive;
+          return NATIVE_REQUEST_SESSION.call(this, options);
+        };
+
+        Object.defineProperty(XRSession.prototype, 'immersive', {
+          enumerable: true,
+          configurable: false,
+          writeable: false,
+          get: function get() {
+            return this.exclusive;
+          }
+        });
+      } // We can't test for the existence of the enums in question directly, so this code
+      // will just try to create the requested type and fall back if it fails.
+
+
+      var NATIVE_REQUEST_FRAME_OF_REFERENCE = XRSession.prototype.requestFrameOfReference;
+
+      XRSession.prototype.requestFrameOfReference = function (type, options) {
+        var session = this; // Try the current type.
+
+        return NATIVE_REQUEST_FRAME_OF_REFERENCE.call(session, type, options).catch(function (error) {
+          // FIXME: Should be checking for TypeError specifically. Requires a polyfill update.
+          if (error instanceof Error) {
+            // If the current type fails, switch to the other version.
+            switch (type) {
+              case 'eye-level':
+                type = 'eyeLevel';
+                break;
+
+              case 'head-model':
+                type = 'headModel';
+                break;
+
+              default:
+                return Promise.reject(error);
+            }
+
+            return Promise.resolve(NATIVE_REQUEST_FRAME_OF_REFERENCE.call(session, type, options));
+          } else {
+            return Promise.reject(error);
+          }
+        });
+      }; // Make sure that requestAnimationFrame is always supplied with a timestamp
+
+
+      var NATIVE_REQUEST_ANIMATION_FRAME = XRSession.prototype.requestAnimationFrame;
+
+      XRSession.prototype.requestAnimationFrame = function (callback) {
+        return NATIVE_REQUEST_ANIMATION_FRAME.call(this, function (timestamp, frame) {
+          callback(timestamp ? timestamp : performance.now(), frame);
+        });
+      };
+
+      if (!('getNativeFramebufferScaleFactor' in XRWebGLLayer)) {
+        if (this._isMobile()) {
+          var NATIVE_WEBGL_LAYER = XRWebGLLayer;
+          var NATIVE_WEBGL_LAYER_PROTOTYPE = XRWebGLLayer.prototype;
+
+          XRWebGLLayer = function XRWebGLLayer(session, gl, options) {
+            if (options && options.framebufferScaleFactor) {
+              // On Chrome 67/68 mobile the default framebuffer returned is 0.7 of full res.
+              options.framebufferScaleFactor = 0.7 * options.framebufferScaleFactor;
+            }
+
+            return new NATIVE_WEBGL_LAYER(session, gl, options);
+          };
+
+          XRWebGLLayer.prototype = NATIVE_WEBGL_LAYER_PROTOTYPE;
+          Object.defineProperty(XRWebGLLayer, 'getNativeFramebufferScaleFactor', {
+            enumerable: true,
+            configurable: false,
+            writeable: false,
+            value: function value(session) {
+              if (!session) {
+                throw new TypeError('No XRSession specified');
+              }
+
+              if (isMobile()) {
+                // On Chrome 67/68 mobile the default framebuffer returned is 0.7 of full res.
+                return 1.42857;
+              } else {
+                // On Chrome 67/68 desktop the full res buffer is already returned.
+                return 1.0;
+              }
+            }
+          });
+        }
+      } // If the environmentBlendMode isn't available report it as 'opaque', since any
+      // implementations lacking this property only really worked on VR headsets.
+
+
+      if (!('environmentBlendMode' in XRSession.prototype)) {
+        Object.defineProperty(XRSession.prototype, 'environmentBlendMode', {
+          enumerable: true,
+          configurable: false,
+          writeable: false,
+          get: function get() {
+            return 'opaque';
+          }
+        });
+      }
+
+      if (!('targetRayMode' in XRInputSource.prototype)) {
+        Object.defineProperty(XRInputSource.prototype, 'targetRayMode', {
+          enumerable: true,
+          configurable: false,
+          writeable: false,
+          get: function get() {
+            switch (this.pointerOrigin) {
+              case 'head':
+                return 'gaze';
+
+              case 'hand':
+                return 'tracked-pointer';
+
+              case 'screen':
+                return 'screen';
+
+              default:
+                throw new ValueError('Unrecognized pointerOrigin: ' + this.pointerOrigin);
+            }
+          }
+        });
+      }
+
+      if (!('targetRay' in XRInputPose.prototype)) {
+        Object.defineProperty(XRInputPose.prototype, 'targetRay', {
+          enumerable: true,
+          configurable: false,
+          writeable: false,
+          get: function get() {
+            if (!this._targetRay) {
+              if (this.targetRayMatrix) {
+                this._targetRay = new XRRayShim(this.targetRayMatrix);
+              } else if (this.pointerMatrix) {
+                this._targetRay = new XRRayShim(this.pointerMatrix);
+              }
+            }
+
+            return this._targetRay || null;
+          }
+        });
+      }
+    }
+  }]);
+
+  return WebXRVersionShim;
+}();
+
+exports.default = WebXRVersionShim;
 },{}],"p5xr/core/p5xr.js":[function(require,module,exports) {
 "use strict";
 
@@ -7794,6 +8073,10 @@ exports.default = void 0;
 
 var _webxrPolyfill = _interopRequireDefault(require("webxr-polyfill"));
 
+var _webxrVersionShim = _interopRequireDefault(require("../../webxr/webxr-version-shim"));
+
+var _p5vr = _interopRequireDefault(require("../p5vr/p5vr"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -7802,7 +8085,6 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var _instance;
 /**
  * p5vr class holds all state and methods that are specific to VR
  * @class
@@ -7817,32 +8099,308 @@ var _instance;
  * @property curClearColor  {Color} background clear color set by global `setVRBackgroundColor`
  * @property self   {p5xr}  a more stable this
  */
-
-
 var p5xr =
 /*#__PURE__*/
 function () {
   function p5xr() {
     _classCallCheck(this, p5xr);
 
+    p5xr.instance = this;
+    var self = this;
     this.xrDevice = null;
+    this.xrButton;
+    this.isVR;
     this.xrSession = null;
     this.xrFrameOfRef = null;
-    this.gl = null; // TODO: initialize with default and make this use p5.Color
+    this.gl = null;
+    this.curClearColor = color(255, 255, 255);
+    this.injectedPolyfill = false;
 
-    this.curClearColor = null;
-    this.polyfill = new _webxrPolyfill.default();
-    _instance = this;
+    if (!navigator.xr) {
+      window.polyfill = new _webxrPolyfill.default();
+      this.injectedPolyfill = polyfill.injected;
+    }
+
+    window.versionShim = new _webxrVersionShim.default();
+
+    this.removeLoadingElement = function () {
+      var loadingScreen = document.getElementById(window._loadingScreenId);
+
+      if (loadingScreen) {
+        loadingScreen.parentNode.removeChild(loadingScreen);
+      }
+    };
+
+    this.preloadOverride = function () {
+      var context = window;
+
+      context._setup();
+    };
+    /**
+     * Called by `createVRCanvas()` or `createARCanvas`.
+     * Creates the button for entering XR.
+     * Requests an XRDevice object based on current device.
+     * Checks if the device supports an immersive session.
+     * Then binds the device to the button. <br>
+     * <b>TODO:</b> Custom styling for button prior to VR canvas creation.
+     */
+
+
+    this.init = function () {
+      this.isVR = this instanceof _p5vr.default;
+
+      p5.instance._incrementPreload();
+
+      self.removeLoadingElement(); // Is WebXR available on this UA?
+
+      self.xrButton = new XRDeviceButton({
+        onRequestSession: self.onXRButtonClicked,
+        onEndSession: self.onSessionEnded
+      });
+      document.querySelector('header').appendChild(self.xrButton.domElement);
+
+      if (navigator.xr) {
+        self.sessionCheck();
+      }
+    };
+
+    this.sessionCheck = function () {
+      if (self.injectedPolyfill) {
+        if (self.isVR) {
+          navigator.xr.requestDevice().then(function (device) {
+            device.supportsSession({
+              immersive: true
+            }).then(function () {
+              console.log('VR supported with polyfill');
+              self.xrButton.setDevice(device);
+            });
+          });
+        } else {
+          // AR with polyfill is unsupported currently
+          self.printUnsupportedMessage();
+          return;
+        }
+      } else if (self.isVR) {
+        navigator.xr.supportsSessionMode('immersive-vr').then(function () {
+          console.log('VR supported without polyfill'); // Updates the button to start an XR session when clicked.
+          // HACK
+
+          self.xrButton.setDevice(true);
+        });
+      } else {
+        navigator.xr.supportsSessionMode('legacy-inline-ar').then(function () {
+          console.log('AR supported without polyfill'); // TEMPORARY HACK 4/7/19
+
+          self.xrButton.setDevice(true);
+        });
+      }
+    };
+    /**
+     * This is the method that is attached to the event that announces
+     * availability of a new frame. The next animation frame is requested here,
+     * the device pose is retrieved, the modelViewMatrix (`uMVMatrix`) for p5 is set,
+     * and each eye is drawn
+     * @param frame {XRFrame}
+     */
+
+
+    this.onXRFrame = function (t, frame) {
+      var session = self.xrSession = frame.session;
+
+      if (session === null || self.gl === null) {
+        return;
+      } // Inform the session that we're ready for the next frame.
+
+
+      session.requestAnimationFrame(self.onXRFrame); // Get the XRDevice pose relative to the Frame of Reference we created
+      // earlier.
+
+      if (p5.instance.width < window.innerWidth * window.devicePixelRatio) {
+        var oldWidth = p5.instance.width;
+        p5.instance.resizeCanvas(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio);
+        console.log('p5 Canvas resized from ' + oldWidth + ' to ' + p5.instance.width);
+      }
+
+      var pose;
+
+      if (self.injectedPolyfill) {
+        pose = frame.getDevicePose(self.xrFrameOfRef);
+      } else {
+        pose = frame.getViewerPose(self.xrFrameOfRef);
+      } // Getting the pose may fail if, for example, tracking is lost. So we
+      // have to check to make sure that we got a valid pose before attempting
+      // to render with it. If not in this case we'll just leave the
+      // framebuffer cleared, so tracking loss means the scene will simply
+      // dissapear.
+
+
+      if (pose) {
+        // If we do have a valid pose, bind the WebGL layer's framebuffer,
+        // which is where any content to be displayed on the XRDevice must be
+        // rendered.
+        self.gl.bindFramebuffer(self.gl.FRAMEBUFFER, session.baseLayer.framebuffer);
+
+        if (self.isVR) {
+          self._clearVR();
+        }
+
+        if (self.injectedPolyfill) {
+          var _iteratorNormalCompletion = true;
+          var _didIteratorError = false;
+          var _iteratorError = undefined;
+
+          try {
+            for (var _iterator = frame.views[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+              var view = _step.value;
+              var viewport = session.baseLayer.getViewport(view);
+              self.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+
+              p5.instance._renderer.uMVMatrix.set(pose.getViewMatrix(view));
+
+              p5.instance._renderer.uPMatrix.set(view.projectionMatrix);
+
+              self._drawEye();
+            }
+          } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion && _iterator.return != null) {
+                _iterator.return();
+              }
+            } finally {
+              if (_didIteratorError) {
+                throw _iteratorError;
+              }
+            }
+          }
+        } else {
+          var _iteratorNormalCompletion2 = true;
+          var _didIteratorError2 = false;
+          var _iteratorError2 = undefined;
+
+          try {
+            for (var _iterator2 = pose.views[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+              var _view = _step2.value;
+
+              var _viewport = session.baseLayer.getViewport(_view);
+
+              self.gl.viewport(_viewport.x, _viewport.y, _viewport.width, _viewport.height);
+
+              p5.instance._renderer.uMVMatrix.set(_view.viewMatrix);
+
+              p5.instance._renderer.uPMatrix.set(_view.projectionMatrix);
+
+              self._drawEye();
+            }
+          } catch (err) {
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
+                _iterator2.return();
+              }
+            } finally {
+              if (_didIteratorError2) {
+                throw _iteratorError2;
+              }
+            }
+          }
+        }
+      }
+    };
+    /**
+     * Runs the code that the user has in `draw()` once for each eye
+     * <b>TODO: </b> optimizations!
+     * <b>TODO: </b> make a different `_update` function so that the p5.RendererGL.prototype
+     * does not need to be modified (ie: we need to reset everything except the model view matrix)
+     */
+
+
+    this._drawEye = function () {
+      // 2D Mode should use graphics object
+      if (!p5.instance._renderer.isP3D) {
+        console.error('Sketch does not have 3D Renderer');
+        return;
+      }
+
+      var context = window;
+      var userSetup = context.setup;
+      var userDraw = context.draw;
+
+      if (typeof userDraw === 'function') {
+        if (typeof userSetup === 'undefined') {
+          context.scale(context._pixelDensity, context._pixelDensity);
+        }
+
+        var callMethod = function callMethod(f) {
+          f.call(context);
+        }; // TODO Just call a different function that does this minus matrix reset
+
+
+        if (context._renderer.isP3D) {
+          context._renderer._update();
+        } else {
+          console.error('Context does not have 3D Renderer');
+        }
+
+        context._setProperty('frameCount', context.frameCount + 0.5);
+
+        context._registeredMethods.pre.forEach(callMethod);
+
+        p5.instance._inUserDraw = true;
+
+        try {
+          userDraw();
+        } finally {
+          p5.instance._inUserDraw = false;
+        }
+
+        context._registeredMethods.post.forEach(callMethod);
+      }
+    };
+
+    this.printUnsupportedMessage = function () {
+      console.warn('Your browser/hardware does not work with AR Mode currently. This is' + ' undergoing heavy development currently.' + 'You may be able to fix this by enabling WebXR flags in Chrome.');
+      return;
+    };
+    /**
+    * Called either when the user has explicitly ended the session
+    *  or when the UA has ended the session for any reason.
+    * The xrSession is ended and discarded. p5 is reset with `remove()`
+    * 
+    */
+
+
+    this.onSessionEnded = function () {
+      var self = p5xr.instance;
+
+      if (self.xrSession) {
+        self.xrSession.end();
+        self.xrSession = null;
+      }
+
+      var p5Canvi = document.getElementsByClassName('p5Canvas');
+
+      while (p5Canvi.length > 0) {
+        p5Canvi[0].parentNode.removeChild(p5Canvi[0]);
+      }
+
+      self.xrButton.session = null;
+      self.gl = null;
+    };
   }
 
-  _createClass(p5xr, null, [{
+  _createClass(p5xr, [{
     key: "instance",
     get: function get() {
-      return _instance;
+      return window.p5xr.instance;
     },
     set: function set(p5xrInst) {
-      _instance = p5xrInst;
-      return _instance;
+      window.p5xr.instance = p5xrInst;
+      return window.p5xr.instance;
     }
   }]);
 
@@ -7850,7 +8408,168 @@ function () {
 }();
 
 exports.default = p5xr;
-},{"webxr-polyfill":"../node_modules/webxr-polyfill/build/webxr-polyfill.module.js"}],"p5xr/p5vr/p5vr.js":[function(require,module,exports) {
+},{"webxr-polyfill":"../node_modules/webxr-polyfill/build/webxr-polyfill.module.js","../../webxr/webxr-version-shim":"webxr/webxr-version-shim.js","../p5vr/p5vr":"p5xr/p5vr/p5vr.js"}],"p5xr/p5vr/p5vr.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _p5xr2 = _interopRequireDefault(require("../core/p5xr"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+/**
+ * p5vr class holds all state and methods that are specific to VR
+ * @class
+ *
+ * @constructor
+ *
+ */
+var p5vr =
+/*#__PURE__*/
+function (_p5xr) {
+  _inherits(p5vr, _p5xr);
+
+  function p5vr() {
+    var _this;
+
+    _classCallCheck(this, p5vr);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(p5vr).call(this));
+
+    var self = _assertThisInitialized(_this);
+
+    _this.initVR = function () {
+      this.init();
+    };
+    /**
+     * This is where the actual p5 canvas is first created, and
+     * the GL rendering context is accessed by p5vr. 
+     * The current XRSession also gets a frame of reference and
+     * base rendering layer. <br>
+     * <b>TODO:</b> Make sure that p5's preload isn't actually completed until this function 
+     * is called.
+     * @param {XRSession}
+     */
+
+
+    _this.startSketch = function (session) {
+      self.xrSession = self.xrButton.session = session;
+      self.xrSession.addEventListener('end', self.onSessionEnded);
+      self.preloadOverride(); // create p5 canvas
+
+      createCanvas(windowWidth, windowHeight, WEBGL);
+
+      if (self.injectedPolyfill) {
+        self.onRequestSessionPolyfill();
+      } else {
+        self.onRequestSessionNoPF();
+      }
+
+      p5.instance._decrementPreload();
+    };
+    /**
+     * `device.requestSession()` must be called within a user gesture event.
+     * @param {XRDevice}
+     */
+
+
+    _this.onXRButtonClicked = function (device) {
+      if (self.injectedPolyfill) {
+        console.log('requesting session with device and immersive = true');
+        device.requestSession({
+          immersive: true
+        }).then(self.startSketch);
+      } else {
+        console.log('requesting session with mode: immersive-vr');
+        navigator.xr.requestSession({
+          mode: 'immersive-vr'
+        }).then(self.startSketch);
+      } // requestSession must be called within a user gesture event
+      // like click or touch when requesting an immersive session.
+
+    };
+
+    _this.onRequestSessionPolyfill = function () {
+      console.log('set context with compatible device'); // get a copy of the same gl that p5 is using
+
+      self.gl = canvas.getContext('webgl', {
+        compatibleXRDevice: self.xrSession.device
+      }); // Use the p5's WebGL context to create a XRWebGLLayer and set it as the
+      // sessions baseLayer. This allows any content rendered to the layer to
+      // be displayed on the XRDevice;
+
+      self.xrSession.baseLayer = new XRWebGLLayer(self.xrSession, self.gl); // Get a frame of reference, which is required for querying poses. In
+      // this case an 'eye-level' frame of reference means that all poses will
+      // be relative to the location where the XRDevice was first detected.
+
+      self.xrSession.requestFrameOfReference('eye-level').then(function (frameOfRef) {
+        self.xrFrameOfRef = frameOfRef; // Inform the session that we're ready to begin drawing.
+
+        self.xrSession.requestAnimationFrame(self.onXRFrame);
+      });
+    };
+
+    _this.onRequestSessionNoPF = function () {
+      console.log('set context with xrCompatible: true');
+      self.gl = canvas.getContext('webgl', {
+        xrCompatible: true
+      });
+      self.gl.makeXRCompatible().then(function () {
+        // Use the p5's WebGL context to create a XRWebGLLayer and set it as the
+        // sessions baseLayer. This allows any content rendered to the layer to
+        // be displayed on the XRDevice;
+        self.xrSession.baseLayer = new XRWebGLLayer(self.xrSession, self.gl);
+      }); // Get a frame of reference, which is required for querying poses. In
+      // this case an 'eye-level' frame of reference means that all poses will
+      // be relative to the location where the XRDevice was first detected.
+
+      self.xrSession.requestReferenceSpace({
+        type: 'stationary',
+        subtype: 'eye-level'
+      }).then(function (refSpace) {
+        self.xrFrameOfRef = refSpace; // Inform the session that we're ready to begin drawing.
+
+        self.xrSession.requestAnimationFrame(self.onXRFrame);
+      });
+    };
+    /**
+     * clears the background based on the current clear color (`curClearColor`)
+     */
+
+
+    _this._clearVR = function () {
+      if (self.curClearColor === null) {
+        return;
+      }
+
+      p5.instance.background(self.curClearColor);
+    };
+
+    return _this;
+  }
+
+  return p5vr;
+}(_p5xr2.default);
+
+exports.default = p5vr;
+},{"../core/p5xr":"p5xr/core/p5xr.js"}],"p5xr/p5ar/p5ar.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -7876,89 +8595,40 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
-/**
- * p5vr class holds all state and methods that are specific to VR
- * @class
- *
- * @constructor
- *
- */
-var p5vr =
+var p5ar =
 /*#__PURE__*/
 function (_p5xr) {
-  _inherits(p5vr, _p5xr);
+  _inherits(p5ar, _p5xr);
 
-  function p5vr() {
+  function p5ar() {
     var _this;
 
-    _classCallCheck(this, p5vr);
+    _classCallCheck(this, p5ar);
 
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(p5vr).call(this));
-    var self = _p5xr2.default.instance;
-    /**
-     * Called by `createVRCanvas()`.
-     * Creates the button for entering VR.
-     * Requests an XRDevice object based on current device.
-     * Checks if the device supports an immersive session.
-     * Then binds the device to the button. <br>
-     * <b>TODO:</b> Custom styling for button prior to VR canvas creation.
-     */
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(p5ar).call(this)); // let self = p5xr.instance;
 
-    _this.initVR = function () {
-      // Is WebXR available on this UA?
-      var xrButton = new XRDeviceButton({
-        onRequestSession: self.onVRButtonClicked,
-        onEndSession: self.onSessionEnded
-      });
-      document.querySelector('header').appendChild(xrButton.domElement);
-
-      if (navigator.xr) {
-        // Request a list of all the XR Devices connected to the system.
-        navigator.xr.requestDevice().then(function (device) {
-          // If the device allows creation of immersive sessions set it as the
-          // target of the 'Enter XR' button.
-          device.supportsSession({
-            immersive: true
-          }).then(function () {
-            console.log('supported');
-            xrButton.setDevice(device);
-          });
-        });
-      }
-    };
+    var xrButton;
+    _this.canvas = null;
     /**
      * This is where the actual p5 canvas is first created, and
      * the GL rendering context is accessed by p5vr. 
      * The current XRSession also gets a frame of reference and
      * base rendering layer. <br>
-     * <b>TODO:</b> Make sure that p5's preload isn't actually completed until this function 
-     * is called.
      * @param {XRSession}
      */
 
-
     _this.startSketch = function (session) {
-      self.xrSession = session; // create p5 canvas
+      self.xrSession = xrButton.session = session;
+      self.xrSession.addEventListener('end', self.onSessionEnded); // create p5 canvas
 
-      createCanvas(windowWidth, windowHeight, WEBGL); // make a plan for where canvas should live
+      self._preloadOverride(); // HACK TO GET RENDERING CONTEXT 4/7/19
 
-      var canvas = p5.instance.canvas; // get a copy of the same gl that p5 is using
 
-      self.gl = canvas.getContext('webgl', {
-        compatibleXRDevice: session.device
-      }); // Use the p5's WebGL context to create a XRWebGLLayer and set it as the
-      // sessions baseLayer. This allows any content rendered to the layer to
-      // be displayed on the XRDevice.
+      createCanvas(1, 1, WEBGL);
+      self.canvas = p5.instance.canvas;
+      self.onRequestSessionNoPF();
 
-      session.baseLayer = new XRWebGLLayer(session, self.gl); // Get a frame of reference, which is required for querying poses. In
-      // this case an 'eye-level' frame of reference means that all poses will
-      // be relative to the location where the XRDevice was first detected.
-
-      session.requestFrameOfReference('eye-level').then(function (frameOfRef) {
-        self.xrFrameOfRef = frameOfRef; // Inform the session that we're ready to begin drawing.
-
-        session.requestAnimationFrame(self.onXRFrame);
-      });
+      p5.instance._decrementPreload();
     };
     /**
      * `device.requestSession()` must be called within a user gesture event.
@@ -7966,195 +8636,74 @@ function (_p5xr) {
      */
 
 
-    _this.onVRButtonClicked = function (device) {
-      // requestSession must be called within a user gesture event
-      // like click or touch when requesting an immersive session.
-      device.requestSession({
-        immersive: true
-      }).then(self.startSketch);
-    };
-    /**
-     * This is the method that is attached to the event that announces
-     * availability of a new frame. The next animation frame is requested here,
-     * the device pose is retrieved, the modelViewMatrix (`uMVMatrix`) for p5 is set,
-     * and each eye is drawn
-     * @param frame {XRFrame}
-     */
+    _this.onXRButtonClicked = function (device) {
+      // Normalize the various vendor prefixed versions of getUserMedia.
+      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia; // AR currently uses a different canvas. 
 
+      var outputCanvas = document.createElement('canvas');
+      document.querySelector('header').appendChild(outputCanvas);
+      var ctx = outputCanvas.getContext('xrpresent'); // HACK to get close to 'fullscreen' 4/7/19
 
-    _this.onXRFrame = function (t, frame) {
-      var session = self.xrSession = frame.session; // Inform the session that we're ready for the next frame.
+      outputCanvas.style.width = window.innerWidth + 'px';
+      setTimeout(function () {
+        outputCanvas.style.height = window.innerHeight + 'px';
+      }, 0); // HACK to get close to 'fullscreen' 4/7/19
 
-      session.requestAnimationFrame(self.onXRFrame); // Get the XRDevice pose relative to the Frame of Reference we created
-      // earlier.
+      xrButton.hide();
 
-      var pose = frame.getDevicePose(self.xrFrameOfRef); // Getting the pose may fail if, for example, tracking is lost. So we
-      // have to check to make sure that we got a valid pose before attempting
-      // to render with it. If not in this case we'll just leave the
-      // framebuffer cleared, so tracking loss means the scene will simply
-      // dissapear.
-
-      if (pose) {
-        // If we do have a valid pose, bind the WebGL layer's framebuffer,
-        // which is where any content to be displayed on the XRDevice must be
-        // rendered.
-        self.gl.bindFramebuffer(self.gl.FRAMEBUFFER, session.baseLayer.framebuffer);
-
-        self._clearVR();
-
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = frame.views[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var view = _step.value;
-            var viewport = session.baseLayer.getViewport(view);
-            self.gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-
-            p5.instance._renderer.uMVMatrix.set(pose.getViewMatrix(view));
-
-            p5.instance._renderer.uPMatrix.set(view.projectionMatrix);
-
-            _p5xr2.default.instance._drawEye();
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator.return != null) {
-              _iterator.return();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-      }
-    };
-    /**
-     * clears the background based on the current clear color (`curClearColor`)
-     */
-
-
-    _this._clearVR = function () {
-      if (this.curClearColor === null) {
-        return;
-      }
-
-      window.p5.instance.background(this.curClearColor);
-    };
-    /**
-     * Runs the code that the user has in `draw()` once for each eye
-     * <b>TODO: </b> optimizations!
-     * <b>TODO: </b> make a different `_update` function so that the p5.RendererGL.prototype
-     * does not need to be modified (ie: we need to reset everything except the model view matrix)
-     */
-
-
-    _this._drawEye = function () {
-      // 
-      if (!p5.instance._renderer.isP3D) {
-        return;
-      }
-
-      var context = window;
-      var userSetup = context.setup;
-      var userDraw = context.draw;
-
-      if (typeof userDraw === 'function') {
-        if (typeof userSetup === 'undefined') {
-          context.scale(context._pixelDensity, context._pixelDensity);
-        }
-
-        var callMethod = function callMethod(f) {
-          f.call(context);
-        }; // Just call a different function that does this minus matrix reset
-
-
-        if (context._renderer.isP3D) {
-          context._renderer._update();
-        }
-
-        context._setProperty('frameCount', context.frameCount + 0.5);
-
-        context._registeredMethods.pre.forEach(callMethod);
-
-        p5.instance._inUserDraw = true;
-
-        try {
-          userDraw();
-        } finally {
-          p5.instance._inUserDraw = false;
-        }
-
-        context._registeredMethods.post.forEach(callMethod);
+      if (self.injectedPolyfill) {// STUB
+      } else {
+        navigator.xr.requestSession({
+          mode: 'legacy-inline-ar',
+          outputContext: ctx
+        }).then(function (session) {
+          self.startSketch(session);
+        }, function (error) {
+          console.log(error + ' unable to request an immersive-ar session.');
+        });
       }
     };
 
-    _this.onEndSession = function () {};
-    /**
-    * Called either when the user has explicitly ended the session
-    *  or when the UA has ended the session for any reason.
-    * The xrSession is ended and discarded. p5 is reset with `remove()`
-    * 
-    */
+    _this.onRequestSessionPolyfill = function () {// STUB
+    };
 
+    _this.onRequestSessionNoPF = function () {
+      console.log('set context with xrCompatible: true');
+      self.gl = self.canvas.getContext('webgl', {
+        xrCompatible: true
+      });
+      self.gl.makeXRCompatible().then(function () {
+        self.xrSession.baseLayer = new XRWebGLLayer(self.xrSession, self.gl);
+      });
+      self.xrSession.requestReferenceSpace({
+        type: 'stationary',
+        subtype: 'eye-level'
+      }).then(function (refSpace) {
+        self.xrFrameOfRef = refSpace; // Inform the session that we're ready to begin drawing.
 
-    _this.onSessionEnded = function () {
-      this.xrSession.end();
-      this.xrSession = null;
-      this.xrButton.innerHTML = 'Enter VR';
-      this.gl = null;
-      window.p5.instance.remove();
+        self.xrSession.requestAnimationFrame(self.onXRFrame);
+      });
     };
 
     return _this;
   }
 
-  return p5vr;
+  return p5ar;
 }(_p5xr2.default);
 
-exports.default = p5vr;
-},{"../core/p5xr":"p5xr/core/p5xr.js"}],"p5xr/p5ar/p5ar.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _webxrPolyfill = _interopRequireDefault(require("webxr-polyfill"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-// currently a stub
-var p5ar = function p5ar() {
-  _classCallCheck(this, p5ar);
-
-  this.xrDevice = null;
-  this.xrSession = null;
-  this.xrFrameOfRef = null;
-  this.gl = null;
-  this.polyfill = new _webxrPolyfill.default();
-  this.versionShim = new WebXRVersionShim();
-};
-
 exports.default = p5ar;
-},{"webxr-polyfill":"../node_modules/webxr-polyfill/build/webxr-polyfill.module.js"}],"app.js":[function(require,module,exports) {
+},{"../core/p5xr":"p5xr/core/p5xr.js"}],"app.js":[function(require,module,exports) {
 "use strict";
 
-var _p5vr2 = _interopRequireDefault(require("../src/p5xr/p5vr/p5vr.js"));
+var _p5vr = _interopRequireDefault(require("../src/p5xr/p5vr/p5vr.js"));
 
 var _p5ar = _interopRequireDefault(require("../src/p5xr/p5ar/p5ar.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _p5vr;
+window.p5xr = {
+  instance: null
+};
 /**
  * starts the process of creating a VR-ready canvas
  * This actually just creates a button that will set into motion
@@ -8165,12 +8714,26 @@ var _p5vr;
  * @method createVRCanvas
  */
 
-
 p5.prototype.createVRCanvas = function () {
   noLoop();
-  _p5vr = new _p5vr2.default();
+  p5xr.instance = new _p5vr.default();
+  p5xr.instance.init();
+};
+/**
+ * starts the process of creating a VR-ready canvas
+ * This actually just creates a button that will set into motion
+ * the creation of a AR canvas and creates a new p5ar object.
+ * This should be called in `preload()` so
+ * that the entire sketch can wait to start until the user has "entered AR"
+ * via a button click gesture
+ * @method createARCanvas
+ */
 
-  _p5vr.initVR();
+
+p5.prototype.createARCanvas = function () {
+  noLoop();
+  p5xr.instance = new _p5ar.default();
+  p5xr.instance.init();
 };
 /**
  * Sets the clear color for VR-Mode. <br><br>
@@ -8184,11 +8747,11 @@ p5.prototype.createVRCanvas = function () {
 
 
 p5.prototype.setVRBackgroundColor = function (r, g, b) {
-  _p5vr.curClearColor = color(r, g, b);
+  p5xr.instance.curClearColor = color(r, g, b);
 };
 
 p5.RendererGL.prototype._update = function () {
-  /* TODO: Figure out how to avoid overwriting this function */
+  /* TODO: Make a diff function to avoid overwriting this function */
 
   /* IE: Override the resetting of cameraMatrices in _update */
 
@@ -8229,7 +8792,7 @@ p5.RendererGL.prototype._update = function () {
     /*
     */
 
-  /* TODO: Figure out how to avoid overwriting this function */
+  /* TODO: Make different function to avoid overwriting this function */
 
   /* IE: Override the resetting of cameraMatrices in _update */
   this.ambientLightColors.length = 0;
@@ -8238,7 +8801,7 @@ p5.RendererGL.prototype._update = function () {
   this.pointLightPositions.length = 0;
   this.pointLightColors.length = 0;
 };
-},{"../src/p5xr/p5vr/p5vr.js":"p5xr/p5vr/p5vr.js","../src/p5xr/p5ar/p5ar.js":"p5xr/p5ar/p5ar.js"}],"C:/Users/stalg/AppData/Roaming/nvm/v8.15.1/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"../src/p5xr/p5vr/p5vr.js":"p5xr/p5vr/p5vr.js","../src/p5xr/p5ar/p5ar.js":"p5xr/p5ar/p5ar.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -8266,7 +8829,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59941" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49785" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -8441,5 +9004,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["C:/Users/stalg/AppData/Roaming/nvm/v8.15.1/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","app.js"], null)
+},{}]},{},["../node_modules/parcel-bundler/src/builtins/hmr-runtime.js","app.js"], null)
 //# sourceMappingURL=/p5xr.js.map
