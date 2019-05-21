@@ -1,13 +1,13 @@
-function preload(){
-  // need to make sure preload works
+function preload() {
   createVRCanvas();
 }
 
-function setup(){
+function setup() {
   setVRBackgroundColor(200, 0, 150);
 }
-
-function draw(){
+let counter = 0;
+function draw() {
+  if(counter < 2){counter++; return;}
   fill(0, 150, 100);
   translate(0, 0, 10);
   strokeWeight(0.1);
