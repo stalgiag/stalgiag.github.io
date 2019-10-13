@@ -1,4 +1,4 @@
-<!--_sidebar.md -->
+<!-- sidebar.md -->
 
 - [Contributors Introduction](README.md)
 - [Contributing Documentation](contributing_documentation.md)

@@ -1,4 +1,4 @@
-<!-- _navbar.md -->
+<!-- navbar.md -->
 
 * [En](/)
 * [Es](/es/)
