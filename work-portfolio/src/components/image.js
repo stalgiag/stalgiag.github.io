@@ -1,32 +1,40 @@
-import React from "react"
-import { useStaticQuery, graphql } from "gatsby"
-import Img from "gatsby-image"
+import React from 'react';
+import { useStaticQuery, graphql } from 'gatsby';
+import Img from 'gatsby-image';
+import Description from './description';
 
-/*
- * This component is built using `gatsby-image` to automatically serve optimized
- * images with lazy loading and reduced file sizes. The image is loaded using a
- * `useStaticQuery`, which allows us to load the image from directly within this
- * component, rather than having to pass the image data down from pages.
- *
- * For more information, see the docs:
- * - `gatsby-image`: https://gatsby.dev/gatsby-image
- * - `useStaticQuery`: https://www.gatsbyjs.org/docs/use-static-query/
- */
+// eslint-disable-next-line no-unused-vars
+function objectToKeyArray(obj) {
+  return Object.keys(obj);
+}
 
-const Image = () => {
+const Images = () => {
   const data = useStaticQuery(graphql`
-    query {
-      placeholderImage: file(relativePath: { eq: "gatsby-astronaut.png" }) {
-        childImageSharp {
-          fluid(maxWidth: 300) {
+  query {
+    allImageSharp {
+      edges {
+        node {
+          id
+          fluid {
             ...GatsbyImageSharpFluid
           }
         }
       }
     }
-  `)
+  }
+`);
 
-  return <Img fluid={data.placeholderImage.childImageSharp.fluid} />
-}
+  return data.allImageSharp.edges.map((edge) => (
+    <div>
+      <Img fluid={edge.node.fluid} />
+      <Description>
+        {edge.node.fluid.src}
+        <br />
+        Irure voluptate veniam amet reprehenderit aliquip aliquip minim do esse aliquip ex id cupidatat consequat.
+        Consequat et ipsum in ad anim laboris velit. Et laboris culpa officia eiusmod occaecat labore cupidatat consequat ipsum pariatur. Dolore do esse nostrud deserunt nostrud do deserunt. Excepteur quis aute aliquip esse do aliqua quis consequat. Aliquip excepteur eu incididunt ullamco consectetur ut duis. Excepteur dolore Lorem ullamco in do in consectetur laboris.
+      </Description>
+    </div>
+  ));
+};
 
-export default Image
+export default Images;
