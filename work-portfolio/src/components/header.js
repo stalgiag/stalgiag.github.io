@@ -6,30 +6,31 @@ const Header = ({ siteTitle }) => (
   <header
     style={{
       background: 'transparent',
-      border: '4px solid #db0000',
-      marginBottom: '1.45rem',
-      margin: '10%',
+      border: '2px solid #db0000',
+      marginBottom: '-1.45rem',
+      position: 'fixed',
+      height: '100%',
+      left: '8rem',
     }}
   >
-    <div
-      style={{
-        width: '100%',
-        // padding: '4rem 1rem 0 0',
-
-      }}
-    >
-      <h1 style={{ margin: 'auto' }}>
+    <div>
+      <h1>
         <Link
           to="/"
           style={{
+            textOrientation: 'sideways',
+            WebkitTransform: 'scale(-1, -1)',
+            MozTransformOrigin: 'scale(-1, -1)',
+            writingMode: 'vertical-rl',
             color: '#DB0000',
-            textStyle: 'bold',
-            fontSize: '8rem',
+            fontSize: '2.2rem',
             textDecoration: 'none',
+            marginRight: '-0.1rem',
+            marginLeft: '-0.25rem',
             overflow: 'hidden',
             whiteSpace: 'nowrap',
-            display: 'block',
-            margin: '-2rem',
+            marginTop: '0 auto',
+            marginBottom: '0 auto',
           }}
         >
           {siteTitle}

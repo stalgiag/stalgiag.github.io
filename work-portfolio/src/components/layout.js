@@ -26,19 +26,20 @@ const Layout = ({ children }) => {
   return (
     <>
       <Header siteTitle={data.site.siteMetadata.title} />
-      <main>{children}</main>
+      <main id="layoutMain">
+        {children}
+      </main>
       <footer
         style={{
           // transform: 'rotate(90deg)',
           color: 'white',
           textOrientation: 'sideways',
           writingMode: 'vertical-rl',
-          margin: '0',
           paddingTop: '5%',
           position: 'fixed',
           top: '0%',
-          left: '1%',
-          paddingLeft: '5%',
+          left: '0.5rem',
+          paddingLeft: '6rem',
           background: '#db0000',
           height: '100vh',
           // left: '0',

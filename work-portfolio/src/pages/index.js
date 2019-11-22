@@ -5,11 +5,13 @@ import Layout from '../components/layout';
 import Images from '../components/image';
 
 const IndexPage = () => (
-  <Layout>
-    <div id="images">
-      <Images />
-    </div>
-  </Layout>
+  <div id="container">
+    <Layout>
+      <div id="images">
+        <Images />
+      </div>
+    </Layout>
+  </div>
 );
 
 export default IndexPage;
