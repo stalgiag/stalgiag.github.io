@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStaticQuery, graphql } from 'gatsby';
 import Img from 'gatsby-image';
-import Description from './description';
+import Video from './video'
 
 // eslint-disable-next-line no-unused-vars
 function objectToKeyArray(obj) {
@@ -12,45 +12,49 @@ function getLastStringInPath(path) {
   return path.split('/').pop();
 }
 
-const Images = () => {
-  const data = useStaticQuery(graphql`
-  query {
-    allImageSharp {
-      edges {
-        node {
-          id
-          fluid {
-            ...GatsbyImageSharpFluid
+// function getImage(path) {
+//   const relPath = `images/${path}`;
+//   console.log(relPath);
+//   return useStaticQuery(graphql`
+//   query ($relPath: String!){
+//     fileName: file(relativePath: { eq: $relPath }) {
+//       childImageSharp {
+//         fluid(quality: 100) {
+//           ...GatsbyImageSharpFluid
+//         }
+//       }
+//     }
+//   }`);
+// }
+
+// Useful for when I want to load all of the images in a folder
+const getAllImages = function () {
+  return useStaticQuery(graphql`
+    query {
+      allImageSharp {
+        edges {
+          node {
+            id
+            fluid (quality: 100) {
+              ...GatsbyImageSharpFluid
+            }
           }
         }
       }
     }
-  }
 `);
+};
 
-  return data.allImageSharp.edges.map((edge) => (
-    <div className="imageSection">
-      <Img
-        fluid={edge.node.fluid}
-      />
-      <Description>
-        <div
-          className="fileName"
-          style={{ fontStyle: 'italic' }}
-        >
-          {getLastStringInPath(edge.node.fluid.src)}
-        </div>
-        <br />
-       Irure voluptate veniam amet reprehenderit aliquip aliquip
-       minim do esse aliquip ex id cupidatat consequat.
-       Consequat et ipsum in ad anim laboris velit. Et laboris culpa
-       officia eiusmod occaecat labore cupidatat consequat ipsum pariatur.
-       Dolore do esse nostrud deserunt nostrud do deserunt. Excepteur quis aute
-       aliquip esse do aliqua quis consequat. Aliquip excepteur eu incididunt ullamco
-       consectetur ut duis. Excepteur dolore Lorem ullamco in do in consectetur laboris.
-      </Description>
-    </div>
-  ));
+
+const Images = ({ ...props }) => {
+  const data = getAllImages();
+  const image = data.allImageSharp.edges.find((el) => getLastStringInPath(el.node.fluid.src) === props.path);
+  if (image) {
+    return (
+      <Img fluid={image.node.fluid} />
+    );
+  }
+  return null;
 };
 
 export default Images;
