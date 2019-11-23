@@ -48,10 +48,10 @@
         "isVideo" : "false"
     },
     {
-        "path" : "IMG_4509-2_670.jpg.jpg",
+        "path" : "https://player.vimeo.com/video/275014959?color=ff9933&title=0&byline=0&portrait=0",
         "title" : "eee",
         "description" : "Veniam id magna ad officia sint laborum id laboris dolor. Nisi reprehenderit sunt ut eiusmod mollit tempor. Dolor laboris pariatur qui culpa aliqua voluptate officia commodo. Lorem occaecat laborum dolor magna. Aute aute et ullamco est culpa dolor excepteur veniam commodo velit sit in Lorem.",
-        "isVideo" : "false"
+        "isVideo" : "true"
     },
     {
         "path" : "0.png",

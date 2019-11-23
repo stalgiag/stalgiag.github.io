@@ -3,6 +3,7 @@ module.exports = {
     title: 'Stalgia Grigg',
     description: 'Work portfolio for S. Grigg',
     author: 's g',
+    meta: 'name="robots" content="noindex">',
   },
   plugins: [
     'gatsby-plugin-react-helmet',
@@ -33,6 +34,13 @@ module.exports = {
       options: {
         name: 'data',
         path: `${__dirname}/src/data`,
+      },
+    },
+    'gatsby-plugin-robots-txt',
+    {
+      resolve: 'gatsby-plugin-robots-txt',
+      options: {
+        policy: [{ userAgent: '*', disallow: '*' }],
       },
     },
     // this (optional) plugin enables Progressive Web App + Offline functionality

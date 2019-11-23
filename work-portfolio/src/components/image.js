@@ -1,7 +1,6 @@
 import React from 'react';
 import { useStaticQuery, graphql } from 'gatsby';
 import Img from 'gatsby-image';
-import Video from './video'
 
 // eslint-disable-next-line no-unused-vars
 function objectToKeyArray(obj) {
