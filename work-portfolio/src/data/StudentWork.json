@@ -44,7 +44,7 @@
         "title": "Can I Park Here?",
         "artist": "Tabatha Yelós",
         "description": "Deserunt duis anim occaecat consectetur cupidatat quis eiusmod laborum laboris. Cillum labore non ad labore do ex magna duis anim cillum magna laboris. Excepteur nisi sint consectetur Lorem do cillum nisi ex.",
-        "medium": "interactive installation",
+        "medium": "data visualization \n urban design \n augmented reality",
         "isVideo": "true"
     },
     {
@@ -52,7 +52,7 @@
         "title": "Soft Wear",
         "artist": "Lilyan Kris",
         "description": "Ipsum ea culpa eu quis ea exercitation. Consequat labore nulla aute mollit id mollit in consequat exercitation irure sint. Aute dolore eu ea amet anim consectetur exercitation veniam minim Lorem ex eiusmod irure. Velit est consectetur fugiat occaecat veniam proident. Amet quis fugiat sunt Lorem nisi proident sunt. Incididunt excepteur ea dolore pariatur elit nulla Lorem. Ullamco ipsum ex reprehenderit adipisicing nostrud excepteur consequat ullamco est commodo sunt quis.",
-        "medium": "interactive installation",
+        "medium": "poetic fashion \n augmented reality \n printmaking",
         "isVideo": "false"
     },
     {
@@ -60,7 +60,7 @@
         "title": "Crowded Places",
         "artist": "Alison Jeng",
         "description": "Aliquip elit pariatur qui sit tempor et Lorem nostrud officia. Commodo ea do tempor nisi sint laborum ad duis nostrud consectetur. Lorem proident commodo cupidatat dolore nostrud nulla elit proident laboris proident ullamco voluptate laboris.",
-        "medium": "interactive installation",
+        "medium": "game design \n alternate inputs \n web animation",
         "isVideo": "true"
     },
     {
@@ -68,7 +68,7 @@
         "title": "New Friendly Interface by Tyler Yin",
         "artist": "Tyler Yin",
         "description": "Using facial recognition and ",
-        "medium": "interactive installation",
+        "medium": "interactive installation \n artificial intelligence \n human-computer relations",
         "isVideo": "true"
     },
     {
@@ -76,7 +76,7 @@
         "title": "Apotheosis",
         "artist": "Celynne Hebron and Brian Yung",
         "description": "Elit excepteur est fugiat minim sunt id non. Cupidatat culpa adipisicing Lorem commodo ea ipsum quis dolor ullamco veniam aliqua. Lorem cillum laborum aliquip mollit labore eu. Sint occaecat incididunt cillum ad sint aliquip nulla ad. Anim non reprehenderit voluptate magna.",
-        "medium": "interactive installation",
+        "medium": "speech recognition \n virtual reality \n worldbuilding",
         "isVideo": "true"
     },
     {
@@ -84,7 +84,7 @@
         "title": "Cosmic Corporeal",
         "artist": "Chelly Jin",
         "description": "Elit excepteur est fugiat minim sunt id non. Cupidatat culpa adipisicing Lorem commodo ea ipsum quis dolor ullamco veniam aliqua. Lorem cillum laborum aliquip mollit labore eu. Sint occaecat incididunt cillum ad sint aliquip nulla ad. Anim non reprehenderit voluptate magna.",
-        "medium": "interactive installation",
+        "medium": "interactive installation \n physics simulations \n data visualization",
         "isVideo": "true"
     }
 ]

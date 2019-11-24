@@ -6,7 +6,7 @@ const Header = ({ siteTitle }) => (
   <header
     style={{
       background: 'transparent',
-      border: '2px solid #db0000',
+      border: '2px solid var(--main-theme-color)',
       marginBottom: '-1.45rem',
       position: 'fixed',
       height: '100%',
@@ -22,7 +22,7 @@ const Header = ({ siteTitle }) => (
             WebkitTransform: 'scale(-1, -1)',
             MozTransformOrigin: 'scale(-1, -1)',
             writingMode: 'vertical-rl',
-            color: '#DB0000',
+            color: 'var(--main-theme-color)',
             fontSize: '2.2rem',
             textDecoration: 'none',
             marginRight: '-0.1rem',

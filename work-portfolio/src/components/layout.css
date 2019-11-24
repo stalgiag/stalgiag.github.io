@@ -43,6 +43,10 @@
   font-style: normal;
 }
 
+:root {
+  --main-theme-color: blue;
+}
+
 
 .imageSection {
   grid-template-columns: auto 70%;
@@ -50,7 +54,7 @@
   display: grid;
   margin-bottom: 5%;
   grid-gap: 2% 2%;
-  border-top: 2px solid #db0000;
+  border-top: 2px solid var(--main-theme-color);
   padding: 10px;
 }
 
@@ -60,11 +64,15 @@
 }
 
 .medium {
+  pointer-events: none;
+  white-space: pre;
   font-family: 'Trickster';
   position: absolute;
   font-size: 4rem;
-  line-height: 2rem;
-  z-index: 1;
+  line-height: 3.75rem;
+  margin-top: 18rem;
+  margin-left: -2rem;
+  z-index: 0;
   color: rgba(255, 200, 200, 0.3);
   /* text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.19),
                 1px -1px 0 rgba(0, 0, 0, 0.15),
@@ -114,10 +122,11 @@ img {
 #description {
   grid-column-start: 1;
   grid-row-start: 1;
-  color: #db0000;
+  color: var(--main-theme-color);
   margin-right: 10%;
   text-align: justify;
 }
+
 
 html {
   font-family: 'bluu'serif;

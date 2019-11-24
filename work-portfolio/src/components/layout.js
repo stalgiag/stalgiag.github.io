@@ -40,7 +40,7 @@ const Layout = ({ children }) => {
           top: '0%',
           left: '0.5rem',
           paddingLeft: '6rem',
-          background: '#db0000',
+          background: 'var(--main-theme-color)',
           height: '100vh',
           // left: '0',
         }}
@@ -51,7 +51,7 @@ const Layout = ({ children }) => {
             position: 'absolute',
             bottom: '5%',
           }}
-          href="stalgiagrigg@gmail.com"
+          href="mailto:stalgia.grigg@gmail.com"
         >
           contact me
         </a>
