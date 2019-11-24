@@ -14,7 +14,7 @@ const Header = ({ siteTitle }) => (
     }}
   >
     <div>
-      <h1>
+      <h1 id="myName">
         <Link
           to="/"
           style={{

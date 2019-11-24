@@ -11,7 +11,9 @@ const loadAllStudentWork = function () {
         nodes {
           path
           title
+          artist
           description
+          medium
           isVideo
         }
       }
@@ -35,6 +37,7 @@ const Projects = () => {
     }
     return (
       <div className="imageSection" key={index}>
+        <div className="medium">{node.medium}</div>
         {mediaElement}
         <Description>
           <div
@@ -42,6 +45,8 @@ const Projects = () => {
             style={{ fontStyle: 'italic' }}
           >
             {node.title}
+            <br></br>
+            by: {node.artist}
           </div>
           <br />
           {node.description}
