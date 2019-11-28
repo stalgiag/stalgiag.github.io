@@ -4,16 +4,16 @@ import React from 'react';
 import Layout from '../components/layout';
 import Projects from '../components/project';
 
-import './student-work.css';
+import './ucsd.css';
 
-const IndexPage = () => (
+const UCSD = () => (
   <div id="container">
-    <Layout collectionTitle="student work">
+    <Layout collectionTitle="personal work">
       <div id="images">
-        <Projects workType="student" />
+        <Projects workType="ucsd" />
       </div>
     </Layout>
   </div>
 );
 
-export default IndexPage;
+export default UCSD;
