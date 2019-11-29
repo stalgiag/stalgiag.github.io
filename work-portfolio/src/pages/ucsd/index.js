@@ -1,13 +1,15 @@
 
 import React from 'react';
 
-import Layout from '../components/layout';
-import Projects from '../components/project';
+import Layout from '../../components/layout';
+import Projects from '../../components/project';
+import modifyVariables from '../../components/utilities';
 
-import './ucsd.scss';
+import '../styles/base.scss';
 
 const UCSD = () => (
   <div id="container">
+    {modifyVariables('red')}
     <Layout collectionTitle="personal work">
       <div id="images">
         <Projects workType="ucsd" />

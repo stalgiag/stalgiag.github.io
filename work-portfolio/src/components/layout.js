@@ -28,22 +28,7 @@ const Layout = ({ collectionTitle, children }) => {
       <main id="layoutMain">
         {children}
       </main>
-      <footer
-        style={{
-          // transform: 'rotate(90deg)',
-          color: 'white',
-          textOrientation: 'sideways',
-          writingMode: 'vertical-rl',
-          paddingTop: '5%',
-          position: 'fixed',
-          top: '0%',
-          left: '0.5rem',
-          paddingLeft: '6rem',
-          background: 'var(--main-theme-color)',
-          height: '100vh',
-          // left: '0',
-        }}
-      >
+      <footer className="footer">
         {collectionTitle}
         <a
           style={{
