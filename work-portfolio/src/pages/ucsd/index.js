@@ -9,7 +9,7 @@ import '../styles/base.scss';
 
 const UCSD = () => (
   <div id="container">
-    {modifyVariables('red')}
+    {modifyVariables('darkcyan')}
     <Layout collectionTitle="personal work">
       <div id="images">
         <Projects workType="ucsd" />

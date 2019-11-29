@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { useStaticQuery, graphql } from 'gatsby';
 import Img from 'gatsby-image';
 
@@ -45,15 +46,26 @@ const getAllImages = function () {
 };
 
 
-const Images = ({ ...props }) => {
+const Images = ({ path }) => {
   const data = getAllImages();
-  const image = data.allImageSharp.edges.find((el) => getLastStringInPath(el.node.fluid.src) === props.path);
-  if (image) {
-    return (
-      <Img fluid={image.node.fluid} />
-    );
+  const paths = path.split(',');
+  const res = [];
+  for (let i = 0; i < paths.length; i += 1) {
+    const image = data.allImageSharp.edges.find((el) => getLastStringInPath(el.node.fluid.src) === paths[i]);
+    if (image) {
+      res.push(image.node.fluid);
+    }
+  }
+  if (res.length > 0) {
+    return res.map((el, index) => (
+      (<Img fluid={el} key={index} />)
+    ));
   }
   return null;
+};
+
+Images.propTypes = {
+  path: PropTypes.string.isRequired,
 };
 
 export default Images;
