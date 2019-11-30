@@ -70,7 +70,7 @@ const Projects = ({ workType }) => {
       <div className="imageSection" key={index}>
         <div className="medium">{node.medium}</div>
         {mediaElement}
-        <Description style={{ gridRow: '1 / 3' }}>
+        <Description>
           <div
             className="fileName"
             style={{ fontStyle: 'italic' }}

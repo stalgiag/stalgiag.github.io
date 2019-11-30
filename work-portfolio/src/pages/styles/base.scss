@@ -55,12 +55,13 @@
 
 .imageSection {
   grid-template-columns: auto 70%;
-  grid-template-rows: auto;
   display: grid;
-  margin-bottom: 5%;
-  grid-gap: 2% 2%;
+  margin-bottom:50px;
+  grid-gap: 10px 10px;
   border-top: 2px solid var(--main-theme-color);
-  padding: 10px;
+  padding: 15px;
+  align-content: center;
+  align-items: center;
 }
 
 .gatsby-image-wrapper {
@@ -156,11 +157,14 @@ html {
 }
 
 #description {
+  white-space: pre-wrap;
   grid-column-start: 1;
   grid-row: 1 / span all;
   color: var(--main-theme-color);
   margin-right: 10%;
+  padding-left: 30px;
   text-align: justify;
+  // text-justify: distribute;
 }
 
 .footer {

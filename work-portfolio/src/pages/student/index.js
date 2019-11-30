@@ -9,7 +9,7 @@ import '../styles/base.scss';
 
 const IndexPage = () => (
   <div id="container">
-    {modifyVariables('blue')}
+    {modifyVariables('blue', 'rgba(200, 120, 200, 0.3)', 'rgba(255, 255, 255, 0.5)')}
     <Layout collectionTitle="student work">
       <div id="images">
         <Projects workType="student" />

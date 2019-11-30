@@ -35,8 +35,9 @@ const getAllImages = function () {
         edges {
           node {
             id
-            fluid (quality: 100) {
+            fluid (maxWidth: 500, quality: 100) {
               ...GatsbyImageSharpFluid
+              presentationWidth
             }
           }
         }
@@ -57,6 +58,12 @@ const Images = ({ path }) => {
     }
   }
   if (res.length > 0) {
+    // Hack-y way of dealing with small images for the time being:
+    if (res[0].src.includes('nilo')) {
+      return res.map((el, index) => (
+        (<Img style={{ maxWidth: el.presentationWidth, marginLeft: '20%' }} fluid={el} key={index} />)
+      ));
+    }
     return res.map((el, index) => (
       (<Img fluid={el} key={index} />)
     ));

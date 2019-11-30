@@ -37,7 +37,7 @@ const Layout = ({ collectionTitle, children }) => {
           }}
           href="mailto:stalgia.grigg@gmail.com"
         >
-          contact me
+          contact
         </a>
       </footer>
     </>
