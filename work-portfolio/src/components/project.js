@@ -27,6 +27,16 @@ const workQuery = (graphql`
             isVideo
         }
     }
+    allCollabWorkJson {
+      nodes {
+            path
+            title
+            artist
+            description
+            medium
+            isVideo
+        }
+    }
   }
 `);
 
@@ -37,6 +47,8 @@ function loadAllWork(typeOfWork) {
       return data.allStudentWorkJson;
     case 'ucsd':
       return data.allUcsdJson;
+    case 'collab':
+      return data.allCollabWorkJson;
     default:
       console.error('Projects requested without type of work.');
       return undefined;
@@ -58,17 +70,20 @@ const Projects = ({ workType }) => {
     } else {
       mediaElement = <Images path={node.path} />;
     }
-    const artistName = workType === 'student' ? (
+    const artistName = node.artist ? (
       <>
-        by:
-        {' '}
+
         {node.artist}
       </>
     ) : null;
 
+    const medium = node.medium ? (
+      <div className="medium">{node.medium}</div>
+    ) : null;
+
     return (
       <div className="imageSection" key={index}>
-        <div className="medium">{node.medium}</div>
+        {medium}
         {mediaElement}
         <Description>
           <div

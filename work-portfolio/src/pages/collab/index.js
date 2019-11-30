@@ -7,15 +7,15 @@ import modifyVariables from '../../components/utilities';
 
 import '../styles/base.scss';
 
-const UCSD = () => (
+const IndexPage = () => (
   <div id="container">
-    {modifyVariables('rgb(106,0,255)', 'rgba(255, 200, 200, 0.3)', 'rgba(255, 255, 255, 0.5)')}
-    <Layout collectionTitle="personal work">
+    {modifyVariables('red', 'rgba(0, 139, 139, 0.3)', 'rgba(255, 255, 255, 0.5)')}
+    <Layout collectionTitle="collaborative & commercial work">
       <div id="images">
-        <Projects workType="ucsd" />
+        <Projects workType="collab" />
       </div>
     </Layout>
   </div>
 );
 
-export default UCSD;
+export default IndexPage;

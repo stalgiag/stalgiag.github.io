@@ -8,7 +8,7 @@ const Video = ({ videoSrcURL, videoTitle, ...props }) => (
       webkitallowfullscreen="true"
       mozallowfullscreen="true"
       allowFullScreen
-      autoPlay={false}
+      autoPlay="0"
     />
   </div>
 );

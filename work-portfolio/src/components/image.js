@@ -35,7 +35,7 @@ const getAllImages = function () {
         edges {
           node {
             id
-            fluid (maxWidth: 500, quality: 100) {
+            fluid (quality: 100) {
               ...GatsbyImageSharpFluid
               presentationWidth
             }

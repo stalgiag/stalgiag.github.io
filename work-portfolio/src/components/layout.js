@@ -24,6 +24,7 @@ const Layout = ({ collectionTitle, children }) => {
 
   return (
     <>
+      <div id='mobile-site'></div>
       <Header siteTitle={data.site.siteMetadata.title} />
       <main id="layoutMain">
         {children}
