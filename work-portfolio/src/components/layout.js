@@ -6,9 +6,11 @@
  */
 
 import React from 'react';
+import {Button} from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import { useStaticQuery, graphql } from 'gatsby';
 
+import Writing from './modal';
 import Header from './header';
 
 const Layout = ({ collectionTitle, children }) => {
@@ -24,23 +26,22 @@ const Layout = ({ collectionTitle, children }) => {
 
   return (
     <>
-      <div id='mobile-site'></div>
+      <div id="mobile-site" />
       <Header siteTitle={data.site.siteMetadata.title} />
       <main id="layoutMain">
         {children}
       </main>
       <footer className="footer">
         {collectionTitle}
-        <a
-          style={{
-            position: 'absolute',
-            bottom: '5%',
-          }}
+      </footer>
+        <Writing />
+        <Button
+          variant="outline-light"
+          id="contact-link"
           href="mailto:stalgia.grigg@gmail.com"
         >
           contact
-        </a>
-      </footer>
+        </Button>
     </>
   );
 };

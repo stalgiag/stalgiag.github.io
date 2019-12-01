@@ -5,6 +5,7 @@ import Layout from '../../components/layout';
 import Projects from '../../components/project';
 import modifyVariables from '../../components/utilities';
 
+
 import '../styles/base.scss';
 
 const UCSD = () => (

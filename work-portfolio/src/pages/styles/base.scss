@@ -51,12 +51,43 @@
   font-style: normal;
 }
 
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+}
+
 #mobile-site {
   position: fixed;
   width: 100%;
   height: 100%;
   background:white;
   z-index: 100;
+}
+
+#writing-link {
+  position: fixed;
+  bottom: 40px;
+  width: 100px;
+  padding: 5px;
+  left: 0px;
+  color: white;
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
+}
+
+#contact-link{
+  position: fixed;
+  left: 55px;
+  bottom: 32px;
+  margin-bottom: 5px;
+  width: 100px;
+  color: white;
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
 }
 
 .imageSection {
