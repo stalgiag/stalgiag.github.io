@@ -473,6 +473,27 @@ export class WebXRButton {
     if (this.session) {
       this.options.onEndSession(this.session);
     } else if (this._enabled) {
+
+      if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              window.addEventListener('devicemotion', () => {});
+            }
+          })
+          .catch(console.error);
+      }
+
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              window.addEventListener('deviceorientation', () => {});
+            }
+          })
+          .catch(console.error);
+      }
+
       let requestPromise = this.options.onRequestSession();
       if (requestPromise) {
         requestPromise.catch((err) => {
